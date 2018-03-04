@@ -1,0 +1,31 @@
+{
+  "name": "react-qtive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild",
+    "gen-all": "node qt/wrapper-generator.js && node-gyp configure build",
+    "start": "babel-node index.js"
+  },
+  "author": "liuyanghejerry",
+  "license": "ISC",
+  "gypfile": true,
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "nan": "^2.9.2",
+    "performance-now": "^2.1.0",
+    "prop-types": "^15.6.1",
+    "react": "^16.2.0",
+    "react-reconciler": "^0.7.0"
+  },
+  "devDependencies": {
+    "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1"
+  }
+}
