@@ -1,73 +1,57 @@
-
 #include <nan.h>
-#include <QApplication>
-#include <QWidget>
-#include "./qt-wrapper/app.hpp"
-#include "./qt-wrapper/basic-widget.hpp"
-#include "./qt-wrapper/widget.hpp"
-#include "./qt-wrapper/button.hpp"
-#include "./qt-wrapper/label.hpp"
-#include "./qt-wrapper/input.hpp"
 
 using namespace v8;
 
-QApplication * App::_app = nullptr;
-int App::_argv = 0;
-char** App::_args = nullptr;
+class Hello : public Nan::ObjectWrap {
+ public:
+  static NAN_MODULE_INIT(Init) {
+    v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-QApplication* App::getApp() {
-  if (App::_app) {
-    return App::_app;
+    Nan::SetPrototypeMethod(tpl, "getValue", GetValue);
+
+    constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
   }
-  int & argv = App::_argv;
-  App::_app = new QApplication(argv, App::_args);
-  App::_app->setQuitOnLastWindowClosed(true);
-  return App::_app;
-}
 
+  static NAN_METHOD(NewInstance) {
+    v8::Local<v8::Function> cons = Nan::New(constructor());
+    info.GetReturnValue().Set(Nan::NewInstance(cons, 0, 0).ToLocalChecked());
+  }
 
-void ProcessEvents(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  App::getApp()->processEvents();
-  info.GetReturnValue().Set(App::getApp()->allWindows().length());
-}
+ private:
+  explicit Hello() {}
+  ~Hello() {}
+
+  static NAN_METHOD(New) {
+    if (info.IsConstructCall()) {
+      Hello * obj = new Hello();
+      obj->Wrap(info.This());
+      info.GetReturnValue().Set(info.This());
+    } else {
+      v8::Local<v8::Function> cons = Nan::New(constructor());
+      info.GetReturnValue().Set(Nan::NewInstance(cons, 0, 0).ToLocalChecked());
+    }
+  }
+
+  static NAN_METHOD(GetValue) {
+    Hello* obj = ObjectWrap::Unwrap<Hello>(info.Holder());
+    info.GetReturnValue().Set(1);
+  }
+
+  static inline Nan::Persistent<v8::Function> & constructor() {
+    static Nan::Persistent<v8::Function> my_constructor;
+    return my_constructor;
+  }
+
+};
 
 NAN_MODULE_INIT(Init) {
-  
-  Widget::Init(target);
+
+  Hello::Init(target);
   Nan::Set(target,
-    Nan::New<v8::String>("createWidget").ToLocalChecked(),
+    Nan::New<v8::String>("createObject").ToLocalChecked(),
     Nan::GetFunction(
-      Nan::New<v8::FunctionTemplate>(Widget::NewInstance)).ToLocalChecked()
-  );
-
-
-  Button::Init(target);
-  Nan::Set(target,
-    Nan::New<v8::String>("createButton").ToLocalChecked(),
-    Nan::GetFunction(
-      Nan::New<v8::FunctionTemplate>(Button::NewInstance)).ToLocalChecked()
-  );
-
-
-  Label::Init(target);
-  Nan::Set(target,
-    Nan::New<v8::String>("createLabel").ToLocalChecked(),
-    Nan::GetFunction(
-      Nan::New<v8::FunctionTemplate>(Label::NewInstance)).ToLocalChecked()
-  );
-
-
-  Input::Init(target);
-  Nan::Set(target,
-    Nan::New<v8::String>("createInput").ToLocalChecked(),
-    Nan::GetFunction(
-      Nan::New<v8::FunctionTemplate>(Input::NewInstance)).ToLocalChecked()
-  );
-
-  Nan::Set(target,
-    Nan::New<v8::String>("processEvents").ToLocalChecked(),
-    Nan::GetFunction(
-      Nan::New<v8::FunctionTemplate>(ProcessEvents)).ToLocalChecked()
+      Nan::New<v8::FunctionTemplate>(Hello::NewInstance)).ToLocalChecked()
   );
 }
 
