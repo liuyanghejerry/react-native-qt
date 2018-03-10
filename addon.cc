@@ -1,4 +1,5 @@
 #include <nan.h>
+#include <QString>
 
 using namespace v8;
 
@@ -35,7 +36,10 @@ class Hello : public Nan::ObjectWrap {
 
   static NAN_METHOD(GetValue) {
     Hello* obj = ObjectWrap::Unwrap<Hello>(info.Holder());
-    info.GetReturnValue().Set(1);
+    QString str = QString("%1 wants to be %2.").arg("Trump", "the president");
+    auto bytes = str.toUtf8();
+    auto v8Str = Nan::New<v8::String>(bytes.data()).ToLocalChecked();
+    info.GetReturnValue().Set(v8Str);
   }
 
   static inline Nan::Persistent<v8::Function> & constructor() {

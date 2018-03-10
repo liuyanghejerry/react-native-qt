@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "node-gyp rebuild",
     "gen-all": "node-gyp configure build",
-    "start": "index.js"
+    "start": "node index.js"
   },
   "author": "liuyanghejerry",
   "license": "ISC",
