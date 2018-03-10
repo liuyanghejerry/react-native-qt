@@ -1,5 +1,15 @@
-const addon = require('./build/Release/addon');
+const React = require('react');
+const { Component } = require('react');
+const Widget = 'WIDGET';
+const render = require('./react/render');
 
-console.log('hello,', (new addon.createObject()).getValue());
-// or:
-// console.log('hello,', addon.createObject().getValue());
+class Example extends Component {
+
+  render() {
+    return (
+      <Widget></Widget>
+    );
+  }
+}
+
+render(<Example/>);
