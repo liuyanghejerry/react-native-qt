@@ -367,3 +367,91 @@ class Example extends Component {
 
 render(<Example/>);
 ```
+
+## 实现嵌套和布局
+
+我们已经可以成功渲染一个组件了，这是一个非常大的进展。但是如果我想要将组件嵌套起来呢？用现在的代码虽然JSX可以这么写，但实际效果不会有什么卵用，两个Widget只会分别变成两个窗口。
+
+```jsx
+// 如果我们要实现这样的嵌套，该怎么做呢？
+class Example extends Component {
+
+  render() {
+    return (
+      <Widget>
+        <Widget></Widget>
+      </Widget>
+    );
+  }
+}
+```
+
+为什么会这样呢？原因是我们的实际GUI程序是Qt所渲染的，而Qt有他自己的一套规则来进行嵌套。要使用Qt的嵌套，就必须了解一下Qt的布局系统。
+
+Qt的布局主要依靠`QLayout`的各种子类来实现，比较常用的是`QVBoxLayout`和`QHBoxLayout`。Qt的这两个布局比较类似于CSS的flex，前者是纵向弹性布局，而后者则是横向水平布局。被布局的组件会自动撑满父组件，如果需要拉伸或压缩，则各子组件会均匀分摊。
+
+使用的时候需要父组件设置自己的布局，也就是设置一个`QLayout`的实例，这样所有子组件就会自动被布局。和flex类似，这两个布局模型也支持一些局部调整，这里就不细说了。
+
+对于我们来说，要桥接Qt的布局系统，其实只需要做两件事：
+
+1. 在原生模块当中，我们需要暴露出组件设置布局的方法
+2. 在JS代码当中，我们需要在组件创建的时候，调用原生代码，以便设置布局
+
+原生代码的核心改动：
+
+```cpp
+// basic-widget.hpp
+static NAN_METHOD(SetLayout) {
+  // info[0]指的是第0个参数
+  // 这里偷了个懒，用数字类型来表示布局到底是水平还是竖直
+  if (!info[0]->IsInt32()) {
+    Nan::ThrowError("Layout must be int.");
+    return;
+  }
+  BasicWidget *obj = Nan::ObjectWrap::Unwrap<BasicWidget>(info.Holder());
+  const int layoutId = info[0]->Int32Value();
+  QLayout *layout = nullptr;
+
+  // C++当中，父类类型的指针，可以存放子类的实例
+  // 这是C++多态的一种表现
+  switch (layoutId) {
+  case 1:
+    layout = new QVBoxLayout;
+    break;
+  case 2:
+    layout = new QHBoxLayout;
+    break;
+  }
+  auto oldLayout = obj->getWidget()->layout();
+  obj->getWidget()->setLayout(layout);
+  // 旧的实例需要手动清理
+  if (oldLayout) {
+    delete oldLayout;
+    oldLayout = nullptr;
+  }
+}
+```
+
+JS这一侧的改动更小一些。主要是`Widget.js`里，在容器创建时，就根据`layout`属性来设置布局。另一方面，由于有了`layout`属性，那么就必须注意观察属性的变化。
+
+```javascript
+// 这是Widget的构造函数
+constructor(root, props) {
+  super(root, props);
+  this.root = root;
+  this.props = {
+    ...Widget.defaultProps,
+    ...props,
+  };
+  this.widget = createWidget();
+  // 这里增加调用布局设置
+  this.widget.setLayout(this.props.layout);
+}
+
+// 同时，组件的属性变化时，我们要能够及时反映在Qt系统里
+update(oldProps, newProps) {
+  if (newProps.layout !== oldProps.layout) {
+    this.widget.setLayout(newProps.layout);
+  }
+}
+```

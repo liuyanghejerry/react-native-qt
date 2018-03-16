@@ -10,6 +10,7 @@ class Widget : public BasicWidget {
     tpl->InstanceTemplate()->SetInternalFieldCount(6);
 
     Nan::SetPrototypeMethod(tpl, "show", Show);
+    Nan::SetPrototypeMethod(tpl, "setLayout", SetLayout);
 
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
   }
@@ -32,11 +33,6 @@ class Widget : public BasicWidget {
       v8::Local<v8::Function> cons = Nan::New(constructor());
       info.GetReturnValue().Set(Nan::NewInstance(cons).ToLocalChecked());
     }
-  }
-
-  static NAN_METHOD(Show) {
-    Widget* obj = ObjectWrap::Unwrap<Widget>(info.Holder());
-    ((QWidget *)obj->getWidget())->show();
   }
 
   static inline Nan::Persistent<v8::Function> & constructor() {

@@ -7,7 +7,9 @@ class Example extends Component {
 
   render() {
     return (
-      <Widget></Widget>
+      <Widget>
+        <Widget></Widget>
+      </Widget>
     );
   }
 }
