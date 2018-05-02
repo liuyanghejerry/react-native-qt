@@ -397,9 +397,55 @@ Qt的布局主要依靠`QLayout`的各种子类来实现，比较常用的是`QV
 对于我们来说，要桥接Qt的布局系统，其实只需要做两件事：
 
 1. 在原生模块当中，我们需要暴露出组件设置布局和建立组件父子关系的方法
-2. 在JS代码当中，我们需要在组件创建的时候，调用原生代码，以便设置布局和建立父子关系
+2. 在JS代码当中，我们需要在组件加入组件树的时候，调用原生代码建立父子关系；同时在组件移除出组件树的时候，解开原生组件的父子关系
 
 原生代码的核心改动：
+
+```cpp
+// 加在BasicWidget中，因为我们希望每个组件都有这个方法
+static NAN_METHOD(SetParent) {
+  BasicWidget *obj = Nan::ObjectWrap::Unwrap<BasicWidget>(info.Holder());
+  BasicWidget *parent = Nan::ObjectWrap::Unwrap<BasicWidget>(info[0]->ToObject());
+  obj->widget_->setParent(parent->getWidget());
+}
+```
+
+另一方面，我选择在reconciler中直接加入设置父子关系的代码：
+
+```javascript
+appendInitialChild(parentInstance, child) {
+  if (parentInstance.appendChild) {
+    parentInstance.appendChild(child);
+    // 处理父子关系
+    if (child.widget && parentInstance.widget) {
+     child.widget.setParent(parentInstance.widget);
+    }
+  } else {
+    parentInstance.document = child;
+  }
+},
+```
+
+加完这段我发现其实不止一个地方涉及到父子关系处理，索性把父子关系相关的代码拆成了两个独立函数：
+
+```javascript
+function attachParentInQt(parent, child) {
+  console.log('attachParentInQt');
+  if (child.widget && parent.widget) {
+    child.widget.setParent(parent.widget);
+  }
+}
+
+function detachParentInQt(child) {
+  console.log('detachParentInQt');
+  if (child.widget) {
+    child.widget.clearParent();
+  }
+}
+```
+
+现在来处理QLayout:
+
 
 ```cpp
 // basic-widget.hpp
@@ -457,3 +503,5 @@ update(oldProps, newProps) {
   }
 }
 ```
+
+现在我们的React代码就可以成功地进行嵌套了。不过如果仅仅是QWidget，那么即使嵌套也看不出什么效果，顶多是窗口数量从2变成了1。下一节我们来看看如何量产一些其他的组件。

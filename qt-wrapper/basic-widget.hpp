@@ -13,6 +13,26 @@ class BasicWidget : public Nan::ObjectWrap {
     return (QWidget*)(this->widget_);
   }
 
+  static NAN_METHOD(SetParent) {
+    BasicWidget *obj = Nan::ObjectWrap::Unwrap<BasicWidget>(info.Holder());
+    BasicWidget *parent = Nan::ObjectWrap::Unwrap<BasicWidget>(info[0]->ToObject());
+    obj->widget_->setParent(parent->getWidget());
+    if (parent->getWidget()->layout()) {
+      parent->getWidget()->layout()->addWidget(obj->widget_);
+    }
+  }
+
+  static NAN_METHOD(ClearParent) {
+    BasicWidget *obj = Nan::ObjectWrap::Unwrap<BasicWidget>(info.Holder());
+    QWidget *parentWidget = (QWidget *)obj->widget_->parent();
+    obj->widget_->setParent(nullptr);
+    if (parentWidget && parentWidget->layout()) {
+      parentWidget->layout()->removeWidget(obj->widget_);
+    }
+    delete obj->widget_;
+    obj->widget_ = nullptr;
+  }
+
   static NAN_METHOD(Show) {
     BasicWidget *obj = ObjectWrap::Unwrap<BasicWidget>(info.Holder());
     obj->getWidget()->show();

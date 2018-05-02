@@ -10,6 +10,8 @@ class Widget : public BasicWidget {
     tpl->InstanceTemplate()->SetInternalFieldCount(6);
 
     Nan::SetPrototypeMethod(tpl, "show", Show);
+    Nan::SetPrototypeMethod(tpl, "setParent", SetParent);
+    Nan::SetPrototypeMethod(tpl, "clearParent", ClearParent);
     Nan::SetPrototypeMethod(tpl, "setLayout", SetLayout);
 
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());

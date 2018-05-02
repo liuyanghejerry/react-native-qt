@@ -5,10 +5,25 @@ const Reconciler = require('react-reconciler');
 
 const emptyObject = {};
 
+function attachParentInQt(parent, child) {
+  console.log('attachParentInQt');
+  if (child.widget && parent.widget) {
+    child.widget.setParent(parent.widget);
+  }
+}
+
+function detachParentInQt(child) {
+  console.log('detachParentInQt');
+  if (child.widget) {
+    child.widget.clearParent();
+  }
+}
+
 const DesktopRenderer = Reconciler({
   appendInitialChild(parentInstance, child) {
     if (parentInstance.appendChild) {
       parentInstance.appendChild(child);
+      attachParentInQt(parentInstance, child);
     } else {
       parentInstance.document = child;
     }
@@ -81,6 +96,7 @@ const DesktopRenderer = Reconciler({
     appendChild(parentInstance, child) {
       if (parentInstance.appendChild) {
         parentInstance.appendChild(child);
+        attachParentInQt(parentInstance, child);
       } else {
         parentInstance.document = child;
       }
@@ -92,6 +108,7 @@ const DesktopRenderer = Reconciler({
       }
       if (parentInstance.appendChild) {
         parentInstance.appendChild(child);
+        attachParentInQt(parentInstance, child);
       } else {
         parentInstance.document = child;
       }
@@ -99,10 +116,12 @@ const DesktopRenderer = Reconciler({
 
     removeChild(parentInstance, child) {
       parentInstance.removeChild(child);
+      detachParentInQt(child);
     },
 
     removeChildFromContainer(parentInstance, child) {
       parentInstance.removeChild(child);
+      detachParentInQt(child);
     },
 
     insertBefore(parentInstance, child, beforeChild) {
