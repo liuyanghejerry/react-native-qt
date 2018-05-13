@@ -35,10 +35,7 @@ class Input : public BasicWidget {
 
  private:
   explicit Input() : BasicWidget(new QLineEdit) {}
-  ~Input() {
-    qDebug() << "Input deleted";
-    delete (QObject *)(0);
-  }
+  ~Input() {}
 
   static NAN_METHOD(New) {
     if (info.IsConstructCall()) {

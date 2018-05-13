@@ -35,10 +35,7 @@ class Button : public BasicWidget {
 
  private:
   explicit Button() : BasicWidget(new QPushButton) {}
-  ~Button() {
-    qDebug() << "Button deleted";
-    delete (QObject *)(0);
-  }
+  ~Button() {}
 
   static NAN_METHOD(New) {
     if (info.IsConstructCall()) {

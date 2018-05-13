@@ -33,10 +33,7 @@ class Label : public BasicWidget {
 
  private:
   explicit Label() : BasicWidget(new QLabel) {}
-  ~Label() {
-    qDebug() << "Label deleted";
-    delete (QObject *)(0);
-  }
+  ~Label() {}
 
   static NAN_METHOD(New) {
     if (info.IsConstructCall()) {

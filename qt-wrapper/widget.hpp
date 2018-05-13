@@ -33,10 +33,7 @@ class Widget : public BasicWidget {
 
  private:
   explicit Widget() : BasicWidget(new QWidget) {}
-  ~Widget() {
-    qDebug() << "Widget deleted";
-    delete (QObject *)(0);
-  }
+  ~Widget() {}
 
   static NAN_METHOD(New) {
     if (info.IsConstructCall()) {
