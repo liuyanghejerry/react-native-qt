@@ -620,3 +620,9 @@ static NAN_METHOD(Clicked) {
   </Widget>
 </Widget>
 ```
+
+效果如图：
+
+[TODO: 运行效果图]
+
+上面的运行结果是基于Windows平台的，那么如果我想要支持macOS呢？下一节我们来稍微调整一下`gyp`文件，支持跨平台。
