@@ -1,8 +1,16 @@
+React 是一个非常有意思的库。在 React 的世界里，你可以用纯函数来实现组件化，这大大简化了组件的维护成本。另一方面，社区中还有很多将 React 嫁接在其它平台上的实验，例如 [react-canvas](https://github.com/Flipboard/react-canvas) 、[react-blessed](https://github.com/Yomguithereal/react-blessed) 等。
+
+![React 的“理想国”](images/react-renderer.png)
+
+我对这个过程非常好奇，所以自己也尝试实现了一把：我把 React 嫁接在了 [Qt](https://www.qt.io/) （一个跨平台 C++ GUI 库）上，使用 React 的写法可以直接在桌面平台跑 Qt 的 GUI 组件。下面我分若干章节给大家聊聊我是怎么做的，希望对大家能够起到抛砖引玉的作用。
+
+为了缩减篇幅并排除不必要的干扰，我把文章所涉及的代码全部放在了 [Github](https://github.com/liuyanghejerry/react-native-qt) 中，大家随时可以去查看。
+
 ## 最简单的Node.js原生模块
 
-其实本来打算把官方的例子贴过来的，但后来想了想，贴过来也没啥太大价值，索性不如大家自己去看一下：https://nodejs.org/api/addons.html#addons_hello_world
+其实本来打算把官方的例子贴过来的，但后来想了想，贴过来也没啥太大价值，索性不如大家自己去[看一下](https://nodejs.org/api/addons.html#addons_hello_world)。
 
-如果要是能照做一下就更好了，以便有一个基础的开发环境。
+要是能照做一下就更好了，以便有一个基础的开发环境。
 
 
 ## 不那么简单的Node.js原生模块
@@ -15,7 +23,7 @@ npm install && npm run gen-all && npm start
 
 顺利的话，应该能看到“Hello, 1”的输出。
 
-我这边使用的是Windows 10，所以配备的C++编译器就是开发者版的VS2017。这个开发者版的VS2017各位可以在微软官方免费下载，无需付费。
+我这边使用的是 Windows 10，所以配备的 C++ 编译器就是开发者版的 VS2017。这个开发者版的 VS2017 各位可以在微软官方免费下载，无需付费。
 
 上面最终运行的JS代码如下：
 
@@ -32,18 +40,18 @@ console.log('hello,', (new addon.createObject()).getValue());
 
 ## 原生模块的生成
 
-V8之前和Chromium都是一个系列的，所以V8本身的开发工具链和Chromium非常相近。C++开发环境不像今天的Node.js这么整齐，因为C++官方之前没有模块系统，也没有成熟的包管理器之类的，工程管理上，各家都有各家的玩法，比如GNU make、CMake、qmake以及VC自己的工程等。
+V8 之前和 Chromium 都是一个系列的，所以 V8 本身的开发工具链和 Chromium 非常相近。C++开发环境不像今天的 Node.js 这么整齐，因为C++官方之前没有模块系统，也没有成熟的包管理器之类的，工程管理上，各家都有各家的玩法，比如 GNU make、CMake、qmake 以及 VC 自己的工程等。
 
-V8这边为了简化和统一各个平台的编译步骤，就采用了`gyp`这样一个工具。印象里gyp是基于Python写的，曾经尝试了解Chromium的时候需要单独安装Python的。
+V8 这边为了简化和统一各个平台的编译步骤，就采用了`gyp`这样一个工具。印象里 gyp 是基于 Python 写的，曾经尝试了解 Chromium 的时候需要单独安装 Python 的。
 
-到了Node.js这边呢，node团队又有了`node-gyp`这么个工具，专门和Node.js配合。我忘了Node.js现在发行版有没有像带`npm`一样带着`node-gyp`，如果没有的话大家可以自己`npm install -g node-gyp`一下试试。
+到了 Node.js 这边呢，node 团队又有了`node-gyp`这么个工具，专门和 Node.js 配合。我忘了 Node.js 现在发行版有没有像带`npm`一样带着`node-gyp`，如果没有的话大家可以自己`npm install -g node-gyp`一下试试。
 
 
 ### `binding.gyp`
 
-仓库里的`binding.gyp`就是node-gyp所需要的入口文件，这就好比于`package.json`相对于npm。
+仓库里的`binding.gyp`就是 node-gyp 所需要的入口文件，这就好比于`package.json`相对于 npm。
 
-gyp文件的结构基本上是个JSON，其中`target_name`是原生模块编译出来以后的文件名，`include_dirs`是默认包含的C++头文件目录，`sources`就是需要编译的C++源码。
+gyp 文件的结构基本上是个 JSON，其中`target_name`是原生模块编译出来以后的文件名，`include_dirs`是默认包含的C++头文件目录，`sources`就是需要编译的C++源码。
 
 稍微说一下C++的源码特征。
 
@@ -57,7 +65,7 @@ C++源码分成头文件和源码文件两类，习惯上头文件是`xxx.h`、`
 
 本来这个文件可以没有任何魔法，但是那样的话会有大量的废话代码，而且Node.js的原生模块API随着Node.js的版本发生了多次变迁，单纯维护原生模块接口和Node.js的衔接，就要写很多屎。
 
-所以，社区里搞出了一个方案，叫做NaN。名字比较有意思，这应该是作者在玩梗了。
+所以，社区里搞出了一个方案，叫做 [NaN](https://github.com/nodejs/nan) 。名字比较有意思，这应该是作者在玩梗了。
 
 ```cpp
 // 引入NaN的头文件
@@ -144,4 +152,3 @@ NODE_MODULE(hello, Init)
 4. 给步骤1的函数挂在到原生模块上，名字叫`createObject`
 
 所以你看，即使只有这么简单几件事，在C++中也是要大费周折的，而且这还是我们用了NaN的封装之后。
-
