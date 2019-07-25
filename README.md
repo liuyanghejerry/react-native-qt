@@ -145,3 +145,7 @@ class Example extends Component {
 
 render(<Example/>);
 ```
+
+实际效果：
+
+![实际效果](images/first-demo.png)
